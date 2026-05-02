@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dashboard</title>
+  <title>Admin Dashboard</title>
+
   <link rel="stylesheet" href="../css/styles.css">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
 <body>
 
 <div class="container">
@@ -11,51 +15,168 @@
   <h1>Admin Dashboard</h1>
 
   <div class="card">
-    <p>Total Users: <span id="users"></span></p>
-    <p>Total Votes: <span id="votes"></span></p>
-    <p>Total Nominees: <span id="nominees"></span></p>
-    <p>Total Categories: <span id="categories"></span></p>
-    <p>Voting: <span id="voting"></span></p>
-    <p>Nominations: <span id="nominations"></span></p>
+
+    <p>Total Users:
+      <span id="users">0</span>
+    </p>
+
+    <p>Total Votes:
+      <span id="votes">0</span>
+    </p>
+
+    <p>Total Nominees:
+      <span id="nominees">0</span>
+    </p>
+
+    <p>Total Categories:
+      <span id="categories">0</span>
+    </p>
+
+    <p>Voting:
+      <span id="voting">...</span>
+    </p>
+
+    <p>Nominations:
+      <span id="nominations">...</span>
+    </p>
+
   </div>
 
-  <button onclick="go('nominees.html')">Manage Nominees</button>
-  <button onclick="go('control.html')">Control Panel</button>
-  <button onclick="go('results.html')">View Results</button>
-  <button onclick="logout()" class="danger">Logout</button>
+  <button onclick="go('nominees.html')">
+    Manage Nominees
+  </button>
+
+  <button onclick="go('control.html')">
+    Control Panel
+  </button>
+
+  <button onclick="go('results.html')">
+    View Results
+  </button>
+
+  <button onclick="logout()" class="danger">
+    Logout
+  </button>
 
 </div>
 
 <script src="../js/api.js"></script>
+
 <script>
+
+/* =========================
+   ADMIN AUTH CHECK
+========================= */
+
+const adminToken =
+  localStorage.getItem("adminToken");
+
+const adminUser =
+  JSON.parse(
+    localStorage.getItem("adminUser")
+  );
+
+/* =========================
+   BLOCK UNAUTHORIZED USERS
+========================= */
+
+if (
+  !adminToken ||
+  !adminUser ||
+  adminUser.role !== "ADMIN"
+) {
+
+  console.log("ADMIN NOT LOGGED IN");
+
+  window.location.href =
+    "login.html";
+}
+
+/* =========================
+   NAVIGATION
+========================= */
+
 function go(page) {
+
   window.location.href = page;
 }
 
+/* =========================
+   LOGOUT
+========================= */
+
 function logout() {
+
+  // REMOVE ADMIN SESSION
+  localStorage.removeItem("adminToken");
+  localStorage.removeItem("adminUser");
+
+  // REMOVE NORMAL USER SESSION
   localStorage.removeItem("token");
-  window.location.href = "login.html";
+  localStorage.removeItem("user");
+
+  window.location.href =
+    "login.html";
 }
 
+/* =========================
+   LOAD DASHBOARD
+========================= */
+
 async function loadDashboard() {
+
   try {
-    const data = await apiRequest("/api/admin/analytics/stats");
 
-    document.getElementById("users").innerText = data.users;
-    document.getElementById("votes").innerText = data.votes;
-    document.getElementById("nominees").innerText = data.nominees;
-    document.getElementById("categories").innerText = data.categories;
+    const data =
+      await apiRequest(
+        "/api/admin/analytics/stats"
+      );
 
-    document.getElementById("voting").innerText = data.votingOpen ? "OPEN" : "CLOSED";
-    document.getElementById("nominations").innerText = data.nominationsOpen ? "OPEN" : "CLOSED";
+    document.getElementById("users")
+      .innerText = data.users || 0;
+
+    document.getElementById("votes")
+      .innerText = data.votes || 0;
+
+    document.getElementById("nominees")
+      .innerText = data.nominees || 0;
+
+    document.getElementById("categories")
+      .innerText = data.categories || 0;
+
+    document.getElementById("voting")
+      .innerText =
+        data.votingOpen
+          ? "OPEN"
+          : "CLOSED";
+
+    document.getElementById("nominations")
+      .innerText =
+        data.nominationsOpen
+          ? "OPEN"
+          : "CLOSED";
 
   } catch (err) {
-    alert("Session expired or unauthorized");
-    window.location.href = "login.html";
+
+    console.error(
+      "DASHBOARD ERROR:",
+      err.message
+    );
+
+    alert(
+      "Session expired or unauthorized"
+    );
+
+    logout();
   }
 }
 
+/* =========================
+   START
+========================= */
+
 loadDashboard();
+
 </script>
 
 </body>
