@@ -18,19 +18,40 @@
 </div>
 
 <script src="../js/api.js"></script>
+
 <script>
 async function login() {
+
   const email = document.getElementById("email").value;
 
   try {
-    const res = await apiRequest("/api/admin-auth/login", "POST", { email });
 
-    localStorage.setItem("token", res.token);
+    const res = await apiRequest(
+      "/api/admin-auth/login",
+      "POST",
+      { email }
+    );
 
-    localStorage.setItem("user", JSON.stringify({ role: "ADMIN" }));
-window.location.href = "dashboard.html";
+    // STORE ADMIN TOKEN SEPARATELY
+    localStorage.setItem("adminToken", res.token);
+
+    // STORE ADMIN USER
+    localStorage.setItem(
+      "adminUser",
+      JSON.stringify(res.user)
+    );
+
+    // REMOVE NORMAL USER TOKEN
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    window.location.href = "dashboard.html";
+
   } catch (err) {
-    document.getElementById("error").innerText = err.message;
+
+    document.getElementById("error").innerText =
+      err.message;
+
   }
 }
 </script>
