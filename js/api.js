@@ -1,87 +1,76 @@
-const BASE_URL =
-  window.location.hostname === "localhost"
-    ? "http://localhost:5000"
-    : "https://kusa-awards-2026-backend.onrender.com";
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
 
-/* =========================
-   GET TOKEN
-========================= */
-function getToken() {
+<div class="container">
+  <div class="card">
+    <h2>Admin Login</h2>
 
-  const adminToken = localStorage.getItem("adminToken");
+    <input type="email" id="email" placeholder="Enter admin email">
+    <button onclick="login()">Login</button>
 
-  if (adminToken) return adminToken;
+    <p id="error" style="color:red;"></p>
+  </div>
+</div>
 
-  return localStorage.getItem("token");
-}
+<script src="../js/api.js"></script>
 
-/* =========================
-   API REQUEST
-========================= */
-async function apiRequest(
-  endpoint,
-  method = "GET",
-  body = null,
-  isForm = false
-) {
+<script src="../js/api.js"></script>
+
+<script>
+async function sendOtp() {
+  const email = document.getElementById("email").value.trim();
+
   try {
+    const res = await apiRequest(
+      "/api/auth/send-otp",
+      "POST",
+      { email }
+    );
 
-    const headers = {};
+    document.getElementById("msg1").innerText =
+      res.message;
 
-    if (!isForm) {
-      headers["Content-Type"] = "application/json";
-    }
-
-    const token = getToken();
-
-    if (token) {
-      headers["Authorization"] = "Bearer " + token;
-    }
-
-    const res = await fetch(BASE_URL + endpoint, {
-      method,
-      headers,
-      body: isForm
-        ? body
-        : body
-        ? JSON.stringify(body)
-        : null,
-    });
-
-    let data;
-
-    try {
-      data = await res.json();
-    } catch {
-      data = {};
-    }
-
-    /* =========================
-       HANDLE 401
-    ========================= */
-    if (res.status === 401) {
-
-      console.log("SESSION EXPIRED");
-
-      localStorage.clear();
-
-      if (window.location.pathname.includes("admin")) {
-        window.location.href = "/admin/login.html";
-      } else {
-        window.location.href = "/login.html";
-      }
-
-      throw new Error("Session expired");
-    }
-
-    if (!res.ok) {
-      throw new Error(data.error || "Request failed");
-    }
-
-    return data;
+    document.getElementById("emailBox").style.display = "none";
+    document.getElementById("otpBox").style.display = "block";
 
   } catch (err) {
-    console.error("API ERROR:", err.message);
-    throw err;
+    document.getElementById("msg1").innerText =
+      err.message;
   }
 }
+
+async function verifyOtp() {
+  const email = document.getElementById("email").value.trim();
+  const code = document.getElementById("otp").value.trim();
+
+  try {
+    const res = await apiRequest(
+      "/api/auth/verify-otp",
+      "POST",
+      { email, code }
+    );
+
+    localStorage.clear();
+    localStorage.setItem("token", res.token);
+    localStorage.setItem("user", JSON.stringify(res.user));
+
+    if (res.user.role === "ADMIN") {
+      window.location.href = "../admin/dashboard.html";
+    } else {
+      window.location.href = "dashboard.html";
+    }
+
+  } catch (err) {
+    document.getElementById("msg2").innerText =
+      err.message;
+  }
+}
+</script>
+
+</body>
+</html>
