@@ -1,76 +1,28 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Admin Login</title>
-  <link rel="stylesheet" href="../css/styles.css">
-</head>
-<body>
+const BASE_URL = "https://kusa-awards-2026-backend.onrender.com/api";
 
-<div class="container">
-  <div class="card">
-    <h2>Admin Login</h2>
+async function apiRequest(endpoint, method = "GET", body = null) {
+  const token = localStorage.getItem("token");
 
-    <input type="email" id="email" placeholder="Enter admin email">
-    <button onclick="login()">Login</button>
+  const res = await fetch(`${BASE_URL}${endpoint}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: body ? JSON.stringify(body) : null,
+  });
 
-    <p id="error" style="color:red;"></p>
-  </div>
-</div>
-
-<script src="../js/api.js"></script>
-
-<script src="../js/api.js"></script>
-
-<script>
-async function sendOtp() {
-  const email = document.getElementById("email").value.trim();
+  let data;
 
   try {
-    const res = await apiRequest(
-      "/api/auth/send-otp",
-      "POST",
-      { email }
-    );
-
-    document.getElementById("msg1").innerText =
-      res.message;
-
-    document.getElementById("emailBox").style.display = "none";
-    document.getElementById("otpBox").style.display = "block";
-
-  } catch (err) {
-    document.getElementById("msg1").innerText =
-      err.message;
+    data = await res.json();
+  } catch {
+    throw new Error("Invalid server response");
   }
-}
 
-async function verifyOtp() {
-  const email = document.getElementById("email").value.trim();
-  const code = document.getElementById("otp").value.trim();
-
-  try {
-    const res = await apiRequest(
-      "/api/auth/verify-otp",
-      "POST",
-      { email, code }
-    );
-
-    localStorage.clear();
-    localStorage.setItem("token", res.token);
-    localStorage.setItem("user", JSON.stringify(res.user));
-
-    if (res.user.role === "ADMIN") {
-      window.location.href = "../admin/dashboard.html";
-    } else {
-      window.location.href = "dashboard.html";
-    }
-
-  } catch (err) {
-    document.getElementById("msg2").innerText =
-      err.message;
+  if (!res.ok) {
+    throw new Error(data.error || "Request failed");
   }
-}
-</script>
 
-</body>
-</html>
+  return data;
+}
