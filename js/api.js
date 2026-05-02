@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://kusa-awards-2026-backend.onrender.com";
 
 function getToken() {
   return localStorage.getItem("token");
