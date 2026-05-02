@@ -8,15 +8,10 @@ const BASE_URL =
 ========================= */
 function getToken() {
 
-  // ADMIN TOKEN PRIORITY
-  const adminToken =
-    localStorage.getItem("adminToken");
+  const adminToken = localStorage.getItem("adminToken");
 
-  if (adminToken) {
-    return adminToken;
-  }
+  if (adminToken) return adminToken;
 
-  // NORMAL USER TOKEN
   return localStorage.getItem("token");
 }
 
@@ -29,79 +24,64 @@ async function apiRequest(
   body = null,
   isForm = false
 ) {
-
   try {
 
     const headers = {};
 
     if (!isForm) {
-      headers["Content-Type"] =
-        "application/json";
+      headers["Content-Type"] = "application/json";
     }
 
     const token = getToken();
 
     if (token) {
-      headers["Authorization"] =
-        "Bearer " + token;
+      headers["Authorization"] = "Bearer " + token;
     }
 
-    const res = await fetch(
-      BASE_URL + endpoint,
-      {
-        method,
-        headers,
-        body: isForm
-          ? body
-          : body
-          ? JSON.stringify(body)
-          : null,
-      }
-    );
+    const res = await fetch(BASE_URL + endpoint, {
+      method,
+      headers,
+      body: isForm
+        ? body
+        : body
+        ? JSON.stringify(body)
+        : null,
+    });
 
-    const data = await res.json();
+    let data;
 
-    // TOKEN EXPIRED
+    try {
+      data = await res.json();
+    } catch {
+      data = {};
+    }
+
+    /* =========================
+       HANDLE 401
+    ========================= */
     if (res.status === 401) {
 
       console.log("SESSION EXPIRED");
 
-      // CLEAR TOKENS
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      localStorage.clear();
 
-      localStorage.removeItem("adminToken");
-      localStorage.removeItem("adminUser");
-
-      // REDIRECT ADMIN
-      if (
-        window.location.pathname.includes("admin")
-      ) {
-
-        window.location.href =
-          "/admin/login.html";
-
+      if (window.location.pathname.includes("admin")) {
+        window.location.href = "/admin/login.html";
       } else {
-
-        window.location.href =
-          "/login.html";
+        window.location.href = "/login.html";
       }
 
       throw new Error("Session expired");
     }
 
     if (!res.ok) {
-      throw new Error(
-        data.error || "Request failed"
-      );
+      throw new Error(data.error || "Request failed");
     }
 
     return data;
 
   } catch (err) {
-
     console.error("API ERROR:", err.message);
-
     throw err;
   }
 }
