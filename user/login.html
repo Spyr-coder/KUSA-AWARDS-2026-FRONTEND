@@ -69,10 +69,11 @@ async function verifyOtp() {
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
 
-    window.location.replace("dashboard.html");
-  } else {
-    document.getElementById("msg2").innerText = data.error;
-  }
+    if (data.user.role === "ADMIN") {
+  window.location.replace("../admin/dashboard.html");
+} else {
+  window.location.replace("dashboard.html");
+}
 }
 </script>
 
