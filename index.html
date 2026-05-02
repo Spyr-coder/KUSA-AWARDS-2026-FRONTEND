@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>KUSA Awards</title>
+</head>
+<body>
+
+<h2>Loading KUSA Awards...</h2>
+
+<script>
+  // simple router
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    window.location.href = "/user/login.html";
+  } else {
+    window.location.href = "/user/dashboard.html";
+  }
+</script>
+
+</body>
+</html>
