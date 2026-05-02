@@ -31,49 +31,76 @@
 <script>
 const API = "http://localhost:5000/api";
 
-/* SEND OTP */
+/* =========================
+   SEND OTP
+========================= */
 async function sendOtp() {
   const email = document.getElementById("email").value.trim();
 
-  const res = await fetch(`${API}/auth/send-otp`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ email })
-  });
+  try {
+    const res = await fetch(`${API}/auth/send-otp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  document.getElementById("msg1").innerText = data.message || data.error;
+    document.getElementById("msg1").innerText =
+      data.message || data.error;
 
-  if (data.message) {
-    document.getElementById("emailBox").style.display = "none";
-    document.getElementById("otpBox").style.display = "block";
+    if (data.message) {
+      document.getElementById("emailBox").style.display = "none";
+      document.getElementById("otpBox").style.display = "block";
+    }
+
+  } catch (err) {
+    document.getElementById("msg1").innerText =
+      "Failed to send OTP";
   }
 }
 
-/* VERIFY OTP */
+/* =========================
+   VERIFY OTP
+========================= */
 async function verifyOtp() {
   const email = document.getElementById("email").value.trim();
   const code = document.getElementById("otp").value.trim();
 
-  const res = await fetch(`${API}/auth/verify-otp`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ email, code })
-  });
+  try {
+    const res = await fetch(`${API}/auth/verify-otp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, code })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.token) {
-    localStorage.clear();
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
+    if (data.token) {
+      localStorage.clear();
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
-    if (data.user.role === "ADMIN") {
-  window.location.replace("../admin/dashboard.html");
-} else {
-  window.location.replace("dashboard.html");
-}
+      // ROLE-BASED REDIRECT FIX
+      if (data.user.role === "ADMIN") {
+        window.location.href = "../admin/dashboard.html";
+      } else {
+        window.location.href = "dashboard.html";
+      }
+
+    } else {
+      document.getElementById("msg2").innerText =
+        data.error || "Login failed";
+    }
+
+  } catch (err) {
+    document.getElementById("msg2").innerText =
+      "Verification failed";
+  }
 }
 </script>
 
