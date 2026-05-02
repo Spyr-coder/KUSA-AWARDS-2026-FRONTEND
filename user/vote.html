@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KUSA Awards 2026 - Voting</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+
+<body>
+
+<h2>KUSA Awards 2026 - Vote Now</h2>
+
+<button onclick="goBack()">⬅ Back</button>
+
+<script>
+/* =========================
+   LOGIN GUARD
+========================= */
+const token = localStorage.getItem("token");
+
+if (!token) {
+  alert("Please log in first.");
+  window.location.href = "login.html";
+}
+</script>
+
+<div id="categoriesContainer"></div>
+
+<script>
+const API = "http://localhost:5000/api";
+
+/* =========================
+   NAVIGATION
+========================= */
+function goBack() {
+  window.location.href = "dashboard.html";
+}
+
+/* =========================
+   LOAD VOTING PAGE
+========================= */
+async function loadVoting() {
+  try {
+    const res = await fetch(`${API}/categories/public`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    const categories = await res.json();
+
+    const container = document.getElementById("categoriesContainer");
+    container.innerHTML = "";
+
+    if (!Array.isArray(categories) || categories.length === 0) {
+      container.innerHTML = "<p>No categories available</p>";
+      return;
+    }
+
+    categories.forEach(category => {
+      if (!category.isActive) return;
+
+      const section = document.createElement("div");
+      section.className = "card";
+
+      section.innerHTML = `
+        <h3>${category.name}</h3>
+        <p>${category.description || ""}</p>
+        <div id="cat-${category.id}">Loading nominees...</div>
+      `;
+
+      container.appendChild(section);
+
+      loadNominees(category.id);
+    });
+
+  } catch (err) {
+    console.error("LOAD VOTING ERROR:", err);
+    document.getElementById("categoriesContainer").innerHTML =
+      "<p>Failed to load voting page</p>";
+  }
+}
+
+/* =========================
+   LOAD NOMINEES
+========================= */
+async function loadNominees(categoryId) {
+  try {
+    const res = await fetch(`${API}/nominees`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    const allNominees = await res.json();
+
+    if (!Array.isArray(allNominees)) {
+      throw new Error("Invalid nominees response");
+    }
+
+    // ✅ Only approved nominees
+    const nominees = allNominees.filter(n => n.approved);
+
+    // ✅ Filter by category
+    const filtered = nominees.filter(n => n.categoryId === categoryId);
+
+    const container = document.getElementById(`cat-${categoryId}`);
+    container.innerHTML = "";
+
+    if (filtered.length === 0) {
+      container.innerHTML = "<p>No approved nominees</p>";
+      return;
+    }
+
+    filtered.forEach(nominee => {
+      const card = document.createElement("div");
+      card.className = "nominee-card";
+
+      // ✅ FIXED IMAGE HANDLING (Cloudinary-safe)
+      const imageUrl =
+        nominee.image && nominee.image.startsWith("http")
+          ? nominee.image
+          : "https://via.placeholder.com/100";
+
+      card.innerHTML = `
+        <img src="${imageUrl}" width="100" alt="Nominee Image">
+
+        <h4>${nominee.name}</h4>
+
+        <button onclick="vote('${categoryId}', '${nominee.id}')">
+          Vote
+        </button>
+      `;
+
+      container.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error("LOAD NOMINEES ERROR:", err);
+
+    const container = document.getElementById(`cat-${categoryId}`);
+    if (container) {
+      container.innerHTML = "<p>Failed to load nominees</p>";
+    }
+  }
+}
+
+/* =========================
+   VOTE
+========================= */
+async function vote(categoryId, nomineeId) {
+  try {
+    const res = await fetch(`${API}/vote`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ categoryId, nomineeId })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert("✅ Vote submitted successfully!");
+    } else {
+      alert(data.error || "Vote failed");
+    }
+
+  } catch (err) {
+    console.error("VOTE ERROR:", err);
+    alert("Failed to submit vote");
+  }
+}
+
+/* =========================
+   INIT
+========================= */
+loadVoting();
+</script>
+
+</body>
+</html>

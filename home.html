@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>KU Awards Home</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+
+<body>
+
+<h2>Welcome to KU Awards</h2>
+
+<button onclick="logout()">Logout</button>
+
+<div id="categories"></div>
+
+<script src="../js/api.js"></script>
+
+<script>
+if (!localStorage.getItem("token")) {
+  window.location.href = "auth.html";
+}
+
+async function loadCategories() {
+  const res = await fetch("http://localhost:5000/api/categories", {
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token")
+    }
+  });
+
+  const data = await res.json();
+
+  const container = document.getElementById("categories");
+
+  data.forEach(cat => {
+    const div = document.createElement("div");
+
+    div.className = "card";
+
+    div.innerHTML = `
+      <h3>${cat.name}</h3>
+      <button onclick="goToVote('${cat.id}')">Vote</button>
+      <button onclick="goToNominate('${cat.id}')">Nominate</button>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+function goToVote(id) {
+  localStorage.setItem("categoryId", id);
+  window.location.href = "vote.html";
+}
+
+function goToNominate(id) {
+  localStorage.setItem("categoryId", id);
+  window.location.href = "nominate.html";
+}
+
+function logout() {
+  localStorage.clear();
+  window.location.href = "auth.html";
+}
+
+loadCategories();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <h2>Admin Login</h2>
+
+    <input type="email" id="email" placeholder="Enter admin email">
+    <button onclick="login()">Login</button>
+
+    <p id="error" style="color:red;"></p>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+async function login() {
+  const email = document.getElementById("email").value;
+
+  try {
+    const res = await apiRequest("/api/admin-auth/login", "POST", { email });
+
+    localStorage.setItem("token", res.token);
+
+    window.location.href = "dashboard.html";
+  } catch (err) {
+    document.getElementById("error").innerText = err.message;
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KUSA Awards 2026 - Winners</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+
+<body>
+
+<h2>🏆 KUSA Awards 2026 - Winners</h2>
+
+<button onclick="goBack()">⬅ Back</button>
+
+<div id="resultsContainer"></div>
+
+<script>
+const API = "http://localhost:5000/api";
+const token = localStorage.getItem("token");
+
+/* =========================
+   AUTH GUARD
+========================= */
+if (!token) {
+  alert("Please login first");
+  window.location.href = "login.html";
+}
+
+/* =========================
+   NAVIGATION
+========================= */
+function goBack() {
+  window.location.href = "dashboard.html";
+}
+
+/* =========================
+   LOAD WINNERS
+========================= */
+async function loadResults() {
+  try {
+    const res = await fetch(`${API}/results/published`, {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    const data = await res.json();
+
+    console.log("Winners:", data); // DEBUG
+
+    const container = document.getElementById("resultsContainer");
+    container.innerHTML = "";
+
+    if (!Array.isArray(data) || data.length === 0) {
+      container.innerHTML = "<p>No results available yet</p>";
+      return;
+    }
+
+    data.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      card.innerHTML = `
+        <h3>${item.category}</h3>
+
+        ${
+          item.winner
+            ? `
+              <img src="${item.winner.image || 'https://via.placeholder.com/120'}" width="120">
+              <h4>${item.winner.name}</h4>
+            `
+            : `<p>No winner announced yet</p>`
+        }
+      `;
+
+      container.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    document.getElementById("resultsContainer").innerHTML =
+      "<p>Failed to load results</p>";
+  }
+}
+
+/* INIT */
+loadResults();
+</script>
+
+</body>
+</html>

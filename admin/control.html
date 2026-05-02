@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Control Panel</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<div class="container">
+
+  <h1>Control Panel</h1>
+
+  <div class="card">
+    <h3>Current Status</h3>
+
+    <p>Voting: <span id="votingStatus"></span></p>
+    <p>Nominations: <span id="nominationsStatus"></span></p>
+  </div>
+
+  <div class="card">
+    <h3>Toggle Controls</h3>
+
+    <button onclick="setVoting(true)">Open Voting</button>
+    <button class="danger" onclick="setVoting(false)">Close Voting</button>
+
+    <br><br>
+
+    <button onclick="setNominations(true)">Open Nominations</button>
+    <button class="danger" onclick="setNominations(false)">Close Nominations</button>
+
+    <p id="msg"></p>
+  </div>
+
+  <button onclick="goBack()">Back</button>
+
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/control.js"></script>
+
+</body>
+</html>

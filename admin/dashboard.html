@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<div class="container">
+
+  <h1>Admin Dashboard</h1>
+
+  <div class="card">
+    <p>Total Users: <span id="users"></span></p>
+    <p>Total Votes: <span id="votes"></span></p>
+    <p>Total Nominees: <span id="nominees"></span></p>
+    <p>Total Categories: <span id="categories"></span></p>
+    <p>Voting: <span id="voting"></span></p>
+    <p>Nominations: <span id="nominations"></span></p>
+  </div>
+
+  <button onclick="go('nominees.html')">Manage Nominees</button>
+  <button onclick="go('control.html')">Control Panel</button>
+  <button onclick="go('results.html')">View Results</button>
+  <button onclick="logout()" class="danger">Logout</button>
+
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+function go(page) {
+  window.location.href = page;
+}
+
+function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "login.html";
+}
+
+async function loadDashboard() {
+  try {
+    const data = await apiRequest("/api/admin/analytics/stats");
+
+    document.getElementById("users").innerText = data.users;
+    document.getElementById("votes").innerText = data.votes;
+    document.getElementById("nominees").innerText = data.nominees;
+    document.getElementById("categories").innerText = data.categories;
+
+    document.getElementById("voting").innerText = data.votingOpen ? "OPEN" : "CLOSED";
+    document.getElementById("nominations").innerText = data.nominationsOpen ? "OPEN" : "CLOSED";
+
+  } catch (err) {
+    alert("Session expired or unauthorized");
+    window.location.href = "login.html";
+  }
+}
+
+loadDashboard();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KUSA Awards - Dashboard</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+
+<body>
+
+<script>
+const token = localStorage.getItem("token");
+
+if (!token) {
+  window.location.replace("login.html");
+}
+</script>
+
+<h2>Welcome to KUSA Awards</h2>
+
+<div class="card">
+  <button onclick="go('vote.html')">🗳 Vote</button>
+  <button onclick="go('nominate.html')">⭐ Nominate</button>
+  <button onclick="go('results.html')">🏆 View Results</button>
+</div>
+
+<script>
+function go(page) {
+  window.location.href = page;
+}
+</script>
+
+</body>
+</html>

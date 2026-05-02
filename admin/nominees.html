@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KUSA Awards 2026 - Admin Nominees</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+
+<body>
+
+<h2>KUSA Awards 2026 - Nominees Management</h2>
+
+<button onclick="goBack()">⬅ Back to Dashboard</button>
+
+<!-- =========================
+     CREATE CATEGORY
+========================= -->
+<div class="card">
+  <h3>Create Category</h3>
+
+  <input type="text" id="catName" placeholder="Category name">
+  <input type="text" id="catDesc" placeholder="Description">
+
+  <button onclick="createCategory()">Create</button>
+
+  <p id="catMsg"></p>
+</div>
+
+<!-- =========================
+     ALL CATEGORIES (NEW)
+========================= -->
+<div class="card">
+  <h3>All Categories</h3>
+
+  <table border="1" width="100%">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody id="categoryTable"></tbody>
+  </table>
+</div>
+
+<!-- =========================
+     NOMINEES
+========================= -->
+<div class="card">
+  <h3>All Submitted Nominees</h3>
+
+  <table border="1" width="100%">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Contact</th>
+        <th>Category</th>
+        <th>Status</th>
+        <th>Image</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody id="nomineeTable"></tbody>
+  </table>
+</div>
+
+<script>
+const API = "http://localhost:5000/api";
+const token = localStorage.getItem("token");
+
+/* =========================
+   NAVIGATION
+========================= */
+function goBack() {
+  window.location.href = "dashboard.html";
+}
+
+/* =========================
+   CREATE CATEGORY
+========================= */
+async function createCategory() {
+  const name = document.getElementById("catName").value;
+  const description = document.getElementById("catDesc").value;
+
+  const res = await fetch(`${API}/categories`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({ name, description })
+  });
+
+  const data = await res.json();
+
+  document.getElementById("catMsg").innerText =
+    data.success ? "Category created!" : data.error;
+
+  loadCategories();
+}
+
+/* =========================
+   LOAD CATEGORIES (NEW)
+========================= */
+async function loadCategories() {
+  try {
+    const res = await fetch(`${API}/categories`, {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    const categories = await res.json();
+
+    const table = document.getElementById("categoryTable");
+    table.innerHTML = "";
+
+    if (!Array.isArray(categories) || categories.length === 0) {
+      table.innerHTML = "<tr><td colspan='4'>No categories</td></tr>";
+      return;
+    }
+
+    categories.forEach(cat => {
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${cat.name}</td>
+        <td>${cat.description || "-"}</td>
+        <td>${cat.isActive ? "🟢 Active" : "🔴 Inactive"}</td>
+        <td>
+          <button onclick="deleteCategory('${cat.id}')">Delete</button>
+        </td>
+      `;
+
+      table.appendChild(row);
+    });
+
+  } catch (err) {
+    console.error("Category load error:", err);
+  }
+}
+
+/* =========================
+   DELETE CATEGORY (NEW)
+========================= */
+async function deleteCategory(id) {
+  if (!confirm("Delete this category? This will remove related nominees.")) return;
+
+  const res = await fetch(`${API}/categories/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  });
+
+  const data = await res.json();
+
+  alert(data.success ? "Category deleted!" : data.error);
+
+  loadCategories();
+}
+
+/* =========================
+   LOAD NOMINEES
+========================= */
+async function loadNominees() {
+  try {
+    const res = await fetch(`${API}/nominations/admin/all`, {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    const data = await res.json();
+    const nominations = data.nominations || [];
+
+    const table = document.getElementById("nomineeTable");
+    table.innerHTML = "";
+
+    if (nominations.length === 0) {
+      table.innerHTML = "<tr><td colspan='6'>No nominations yet</td></tr>";
+      return;
+    }
+
+    nominations.forEach(n => {
+      const nominee = n.nominee || {};
+
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${nominee.name || "-"}</td>
+        <td>${nominee.contact || "-"}</td>
+        <td>${nominee.category?.name || "-"}</td>
+        <td>${nominee.approved ? "✅ Approved" : "❌ Pending"}</td>
+
+        <td>
+          <input type="file" id="file-${nominee.id}">
+          <button onclick="uploadImage('${nominee.id}')">Upload</button>
+        </td>
+
+        <td>
+          <button onclick="approve('${nominee.id}')">Approve</button>
+          <button onclick="removeNominee('${nominee.id}')">Delete</button>
+        </td>
+      `;
+
+      table.appendChild(row);
+    });
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+/* =========================
+   APPROVE
+========================= */
+async function approve(id) {
+  const res = await fetch(`${API}/nominees/${id}/approve`, {
+    method: "PUT",
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  });
+
+  const data = await res.json();
+
+  alert(data.success ? "Approved!" : data.error);
+  loadNominees();
+}
+
+/* =========================
+   DELETE NOMINEE
+========================= */
+async function removeNominee(id) {
+  if (!confirm("Delete this nominee?")) return;
+
+  const res = await fetch(`${API}/nominees/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  });
+
+  const data = await res.json();
+
+  alert(data.success ? "Deleted!" : data.error);
+  loadNominees();
+}
+
+/* =========================
+   IMAGE UPLOAD
+========================= */
+async function uploadImage(id) {
+  const fileInput = document.getElementById(`file-${id}`);
+  const file = fileInput?.files[0];
+
+  if (!file) {
+    alert("Select an image first");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await fetch(`${API}/nominees/${id}/image`, {
+    method: "PUT",
+    headers: {
+      Authorization: "Bearer " + token
+    },
+    body: formData
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("Image uploaded!");
+    loadNominees();
+  } else {
+    alert(data.error || "Upload failed");
+  }
+}
+
+/* INIT */
+loadCategories();
+loadNominees();
+</script>
+
+</body>
+</html>
