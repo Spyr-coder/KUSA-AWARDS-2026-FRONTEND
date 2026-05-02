@@ -1,128 +1,90 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>KU Login</title>
+  <title>Admin Login</title>
   <link rel="stylesheet" href="../css/styles.css">
 </head>
-
 <body>
 
 <div class="container">
+  <div class="card">
+    <h2>Admin Login</h2>
 
-  <div class="card" id="emailBox">
+    <!-- EMAIL INPUT -->
+    <div id="emailBox">
+      <input type="email" id="email" placeholder="Enter admin email">
+      <button onclick="sendOtp()">Send OTP</button>
+      <p id="msg1" style="color:red;"></p>
+    </div>
 
-    <h2>Student Login</h2>
-
-    <input type="email" id="email"
-      placeholder="yourname@students.ku.ac.ke">
-
-    <button onclick="sendOtp()">Send OTP</button>
-
-    <p id="msg1" style="color:red;"></p>
-
-  </div>
-
-  <div class="card" id="otpBox"
-    style="display:none;">
-
-    <h2>Enter OTP</h2>
-
-    <input type="text" id="otp"
-      placeholder="6-digit code">
-
-    <button onclick="verifyOtp()">Verify</button>
-
-    <p id="msg2" style="color:red;"></p>
+    <!-- OTP INPUT -->
+    <div id="otpBox" style="display:none;">
+      <input type="text" id="otp" placeholder="Enter OTP">
+      <button onclick="verifyOtp()">Verify OTP</button>
+      <p id="msg2" style="color:red;"></p>
+    </div>
 
   </div>
-
 </div>
 
 <script src="../js/api.js"></script>
 
 <script>
-
-/* =========================
-   SEND OTP
-========================= */
 async function sendOtp() {
+  const email = document.getElementById("email").value.trim();
 
-  const email =
-    document.getElementById("email").value;
+  if (!email) {
+    document.getElementById("msg1").innerText = "Enter email";
+    return;
+  }
 
   try {
-
     const res = await apiRequest(
-      "/api/auth/send-otp",
+      "/auth/send-otp",
       "POST",
       { email }
     );
 
-    document.getElementById("msg1").innerText =
-      res.message;
+    document.getElementById("msg1").innerText = res.message;
 
-    document.getElementById("emailBox")
-      .style.display = "none";
-
-    document.getElementById("otpBox")
-      .style.display = "block";
+    document.getElementById("emailBox").style.display = "none";
+    document.getElementById("otpBox").style.display = "block";
 
   } catch (err) {
-
-    document.getElementById("msg1").innerText =
-      err.message;
-
+    document.getElementById("msg1").innerText = err.message;
   }
 }
 
-/* =========================
-   VERIFY OTP
-========================= */
 async function verifyOtp() {
+  const email = document.getElementById("email").value.trim();
+  const code = document.getElementById("otp").value.trim();
 
-  const email =
-    document.getElementById("email").value;
-
-  const code =
-    document.getElementById("otp").value;
+  if (!code) {
+    document.getElementById("msg2").innerText = "Enter OTP";
+    return;
+  }
 
   try {
-
     const res = await apiRequest(
-      "/api/auth/verify-otp",
+      "/auth/verify-otp",
       "POST",
       { email, code }
     );
 
     localStorage.clear();
+    localStorage.setItem("token", res.token);
+    localStorage.setItem("user", JSON.stringify(res.user));
 
-    localStorage.setItem(
-      "token",
-      res.token
-    );
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify(res.user)
-    );
-
-    // ROLE REDIRECT
     if (res.user.role === "ADMIN") {
-      window.location.href =
-        "../admin/dashboard.html";
+      window.location.href = "../admin/dashboard.html";
     } else {
-      window.location.href =
-        "dashboard.html";
+      window.location.href = "../dashboard.html";
     }
 
   } catch (err) {
-
-    document.getElementById("msg2").innerText =
-      err.message;
-
+    document.getElementById("msg2").innerText = err.message;
   }
 }
-
 </script>
 
 </body>
