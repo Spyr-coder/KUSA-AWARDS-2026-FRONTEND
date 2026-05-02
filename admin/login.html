@@ -27,7 +27,8 @@ async function login() {
 
     localStorage.setItem("token", res.token);
 
-    window.location.href = "dashboard.html";
+    localStorage.setItem("user", JSON.stringify({ role: "ADMIN" }));
+window.location.href = "dashboard.html";
   } catch (err) {
     document.getElementById("error").innerText = err.message;
   }
